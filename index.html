@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta name="robots" content="noindex, nofollow">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BiRAGAS — The Nuance · Moats &amp; Uniqueness</title>
+    <style>
+        :root {
+            --bg: #0a0a14;
+            --surface: #12122a;
+            --text: #e0e0f0;
+            --accent: #64b5f6;
+            --gold: #f0c060;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Segoe UI', 'Inter', 'Helvetica Neue', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: grab;
+        }
+
+        body:active {
+            cursor: grabbing;
+        }
+        body.pointing {
+            cursor: pointer;
+        }
+
+        #canvas-container {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #overlay {
+            position: fixed;
+            z-index: 10;
+            pointer-events: none;
+            inset: 0;
+        }
+
+        #title-area {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        #title {
+            font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            color: #ffffff;
+            text-shadow: 0 0 40px rgba(140, 180, 255, 0.6), 0 0 80px rgba(120, 160, 240, 0.3);
+            background: linear-gradient(180deg, rgba(20, 20, 50, 0.7) 0%, rgba(10, 10, 30, 0.4) 100%);
+            padding: 12px 28px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        #subtitle {
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            color: rgba(200, 210, 240, 0.7);
+            margin-top: 6px;
+            text-transform: uppercase;
+        }
+
+        #legend {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            pointer-events: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 18px;
+            justify-content: center;
+            background: rgba(14, 14, 35, 0.75);
+            padding: 14px 22px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            max-width: 95vw;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.7rem;
+            color: #c8cce0;
+            letter-spacing: 0.03em;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+            flex-shrink: 0;
+        }
+
+        #tooltip {
+            position: fixed;
+            pointer-events: none;
+            z-index: 30;
+            background: rgba(20, 20, 50, 0.9);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            letter-spacing: 0.04em;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+        }
+        #tooltip.visible {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            #legend {
+                gap: 6px 12px;
+                padding: 10px 14px;
+                border-radius: 22px;
+                bottom: 12px;
+            }
+            .legend-item {
+                font-size: 0.62rem;
+                gap: 4px;
+            }
+            .legend-dot {
+                width: 7px;
+                height: 7px;
+            }
+            #title {
+                font-size: 1rem;
+                padding: 8px 18px;
+            }
+            #subtitle {
+                font-size: 0.6rem;
+            }
+            #tooltip {
+                font-size: 0.7rem;
+                padding: 6px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="title-area">
+        <div id="title">BiRAGAS — The Nuance</div>
+        <div id="subtitle">Moats &amp; Uniqueness · Interactive Map</div>
+    </div>
+
+    <div id="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:#9fb4e8;color:#9fb4e8;"></span>Platform</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#4C8DFF;color:#4C8DFF;"></span>Pillars</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#e85d75;color:#e85d75;"></span>Scientific moats</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#f0c060;color:#f0c060;"></span>Enterprise & regulatory</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#4caf84;color:#4caf84;"></span>Proof / execution</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#b07cd8;color:#b07cd8;"></span>Uniqueness vs field</div>
+    </div>
+
+    <div id="tooltip"></div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.157.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ─────────────────────────────────────
+        // DOM ELEMENTS
+        // ─────────────────────────────────────
+        const container = document.getElementById('canvas-container');
+        const tooltip = document.getElementById('tooltip');
+
+        // ─────────────────────────────────────
+        // SCENE SETUP
+        // ─────────────────────────────────────
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0a0a18, 0.00018);
+
+        const camera = new THREE.PerspectiveCamera(55, container.clientWidth / container.clientHeight, 0.5, 80);
+        camera.position.set(8, 3.5, 10);
+        camera.lookAt(0, 0, -0.5);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.3;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        container.appendChild(renderer.domElement);
+
+        // ─────────────────────────────────────
+        // LIGHTING
+        // ─────────────────────────────────────
+        const ambientLight = new THREE.AmbientLight(0x1a1a40, 1.6);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.DirectionalLight(0xffeedd, 3.5);
+        sunLight.position.set(10, 8, 6);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 1024;
+        sunLight.shadow.mapSize.height = 1024;
+        sunLight.shadow.camera.near = 0.5;
+        sunLight.shadow.camera.far = 50;
+        sunLight.shadow.camera.left = -15;
+        sunLight.shadow.camera.right = 15;
+        sunLight.shadow.camera.top = 15;
+        sunLight.shadow.camera.bottom = -15;
+        sunLight.shadow.bias = -0.0001;
+        scene.add(sunLight);
+
+        const pointLight1 = new THREE.PointLight(0x8899ff, 30, 14, 1.5);
+        pointLight1.position.set(0, 2, 4);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0xff8866, 20, 10, 1.5);
+        pointLight2.position.set(-4, -1, -3);
+        scene.add(pointLight2);
+
+        const pointLight3 = new THREE.PointLight(0x66ddcc, 22, 11, 1.5);
+        pointLight3.position.set(3, -2, -4);
+        scene.add(pointLight3);
+
+        // ─────────────────────────────────────
+        // STARFIELD BACKGROUND
+        // ─────────────────────────────────────
+        const starsGeo = new THREE.BufferGeometry();
+        const starCount = 2400;
+        const starPositions = new Float32Array(starCount * 3);
+        const starSizes = new Float32Array(starCount);
+        for (let i = 0; i < starCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            const r = 16 + Math.random() * 18;
+            starPositions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+            starPositions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+            starPositions[i * 3 + 2] = r * Math.cos(phi);
+            starSizes[i] = Math.random() * 2.5 + 0.4;
+        }
+        starsGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        starsGeo.setAttribute('size', new THREE.BufferAttribute(starSizes, 1));
+        const starsMat = new THREE.PointsMaterial({
+            color: 0xc8d0f8,
+            size: 0.04,
+            transparent: true,
+            opacity: 0.75,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            sizeAttenuation: true,
+        });
+        const stars = new THREE.Points(starsGeo, starsMat);
+        scene.add(stars);
+
+        // ─────────────────────────────────────
+        // ORBIT CONTROLS
+        // ─────────────────────────────────────
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.35;
+        controls.minDistance = 4;
+        controls.maxDistance = 22;
+        controls.maxPolarAngle = Math.PI * 0.78;
+        controls.target.set(0, 0.1, -0.3);
+        controls.update();
+
+        // ─────────────────────────────────────
+        // GLOW SPRITE TEXTURE
+        // ─────────────────────────────────────
+        function createGlowTexture(innerColor, outerColor, size = 256) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const gradient = ctx.createRadialGradient(size / 2, size / 2, size * 0.02, size / 2, size / 2, size / 2);
+            gradient.addColorStop(0, innerColor);
+            gradient.addColorStop(0.15, innerColor);
+            gradient.addColorStop(0.45, outerColor);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        const glowTextures = {};
+        const categoryColors = {"core": "#9fb4e8", "pillars": "#4C8DFF", "science": "#e85d75", "enterprise": "#f0c060", "proof": "#4caf84", "field": "#b07cd8"};
+
+        for (const [key, hex] of Object.entries(categoryColors)) {
+            glowTextures[key] = createGlowTexture(hex, hex + '88');
+        }
+        const whiteGlowTex = createGlowTexture('#ffffff', '#ffffff44');
+
+        // ─────────────────────────────────────
+        // LABEL SPRITE CREATION
+        // ─────────────────────────────────────
+        function createLabelSprite(text, colorHex = '#ffffff') {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(0,0,0,0)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = 'bold 36px "Segoe UI","Inter","Helvetica Neue",sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = colorHex;
+            ctx.shadowColor = 'rgba(0,0,0,0.7)';
+            ctx.shadowBlur = 12;
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+            ctx.shadowBlur = 0;
+            ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.minFilter = THREE.LinearFilter;
+            tex.magFilter = THREE.LinearFilter;
+            const spriteMat = new THREE.SpriteMaterial({
+                map: tex,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+            });
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(3.0, 0.75, 1);
+            return sprite;
+        }
+
+        // ─────────────────────────────────────
+        // NODE DATA DEFINITION
+        // ─────────────────────────────────────
+        const moduleDefinitions = [{"id": "core", "name": "BiRAGAS", "category": "core", "size": 0.42, "pos": [0, 0, 0]}, {"id": "p_causal", "name": "Causal-first (4-layer)", "category": "pillars", "size": 0.26, "pos": [-0.44, 2.43, 0.58]}, {"id": "p_evid", "name": "Multi-evidence DAG", "category": "pillars", "size": 0.26, "pos": [-1.07, 3.39, -0.14]}, {"id": "p_perturb", "name": "Perturbation grounding", "category": "pillars", "size": 0.26, "pos": [-1.11, 3.32, -0.96]}, {"id": "p_shield", "name": "Hallucination shield", "category": "pillars", "size": 0.26, "pos": [-0.17, 2.22, -0.82]}, {"id": "p_enter", "name": "Enterprise-ready", "category": "pillars", "size": 0.26, "pos": [-0.19, 4.12, -0.74]}, {"id": "s_cause", "name": "Cause, not correlation", "category": "science", "size": 0.26, "pos": [-4.39, 0.82, 3.72]}, {"id": "s_crispr", "name": "88.9B CRISPR grounding", "category": "science", "size": 0.26, "pos": [-3.51, 0.24, 3.79]}, {"id": "s_calib", "name": "Calibrated shield (0.947)", "category": "science", "size": 0.26, "pos": [-4.83, 1.4, 2.07]}, {"id": "s_conf", "name": "CCS / PSI confidence", "category": "science", "size": 0.26, "pos": [-4.59, -0.46, 2.12]}, {"id": "e_caai", "name": "Confidential AI", "category": "enterprise", "size": 0.25, "pos": [4.49, 0.1, 1.6]}, {"id": "e_reg", "name": "Regulatory readiness", "category": "enterprise", "size": 0.25, "pos": [4.05, 0.58, 1.52]}, {"id": "e_ip", "name": "IP depth \u2014 75", "category": "enterprise", "size": 0.25, "pos": [2.61, -0.2, 0.66]}, {"id": "e_fly", "name": "Data flywheel", "category": "enterprise", "size": 0.25, "pos": [4.15, 0.72, 0.94]}, {"id": "x_aws", "name": "Live AWS platform", "category": "proof", "size": 0.25, "pos": [2.61, -2.82, -3.4]}, {"id": "x_dis", "name": "6 diseases validated", "category": "proof", "size": 0.25, "pos": [3.14, -2.2, -3.54]}, {"id": "x_repro", "name": "Reproducible runs", "category": "proof", "size": 0.25, "pos": [2.59, -2.64, -1.96]}, {"id": "x_n1", "name": "N=1 do-calculus", "category": "proof", "size": 0.25, "pos": [2.97, -3.23, -1.7]}, {"id": "f_causal", "name": "Causal layer \u2014 wins", "category": "field", "size": 0.22, "pos": [-4.05, -2.3, -2.06]}, {"id": "f_pert", "name": "Perturbation data \u2014 wins", "category": "field", "size": 0.22, "pos": [-3.97, -2.13, -3.85]}, {"id": "f_reg", "name": "Regulatory \u2014 wins", "category": "field", "size": 0.22, "pos": [-2.68, -1.44, -2.52]}, {"id": "f_proof", "name": "Proof of build \u2014 wins", "category": "field", "size": 0.22, "pos": [-2.16, -2.57, -2.21]}];
+
+        // ─────────────────────────────────────
+        // CONNECTION DATA
+        // ─────────────────────────────────────
+        const connectionPairs = [["core", "p_causal"], ["core", "s_crispr"], ["core", "e_caai"], ["core", "x_aws"], ["core", "f_causal"], ["p_causal", "p_evid"], ["p_evid", "p_perturb"], ["p_perturb", "p_shield"], ["p_shield", "p_enter"], ["s_cause", "s_crispr"], ["s_crispr", "s_calib"], ["s_calib", "s_conf"], ["e_caai", "e_reg"], ["e_reg", "e_ip"], ["e_ip", "e_fly"], ["x_aws", "x_dis"], ["x_dis", "x_repro"], ["x_repro", "x_n1"], ["f_causal", "f_pert"], ["f_pert", "f_reg"], ["f_reg", "f_proof"], ["p_causal", "s_cause"], ["p_perturb", "s_crispr"], ["p_shield", "s_calib"], ["p_enter", "e_caai"], ["s_crispr", "x_dis"], ["x_aws", "e_caai"], ["e_reg", "f_reg"], ["s_cause", "f_causal"], ["s_conf", "x_n1"], ["e_ip", "f_proof"], ["p_evid", "s_conf"]];
+
+        // ─────────────────────────────────────
+        // BUILD NODES
+        // ─────────────────────────────────────
+        const nodesMap = {};
+        const allNodes = [];
+        const nodeGlowSprites = [];
+        const nodeLabelSprites = [];
+
+        const nodeGroup = new THREE.Group();
+        scene.add(nodeGroup);
+
+        moduleDefinitions.forEach((def) => {
+            const pos = new THREE.Vector3(def.pos[0], def.pos[1], def.pos[2]);
+
+            // Main sphere
+            const geo = new THREE.SphereGeometry(def.size, 48, 48);
+            const mat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(categoryColors[def.category]),
+                emissive: new THREE.Color(categoryColors[def.category]).multiplyScalar(0.45),
+                emissiveIntensity: 0.7,
+                metalness: 0.25,
+                roughness: 0.35,
+            });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.copy(pos);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            mesh.userData = {
+                id: def.id,
+                name: def.name,
+                category: def.category,
+                baseEmissiveIntensity: 0.7,
+                pulseOffset: Math.random() * Math.PI * 2,
+                baseScale: 1,
+                size: def.size,
+            };
+            nodeGroup.add(mesh);
+
+            // Glow sprite
+            const glowTex = glowTextures[def.category] || whiteGlowTex;
+            const glowMat = new THREE.SpriteMaterial({
+                map: glowTex,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                depthTest: true,
+                transparent: true,
+                opacity: 0.7,
+            });
+            const glowSprite = new THREE.Sprite(glowMat);
+            const glowScale = def.size * 4.5;
+            glowSprite.scale.set(glowScale, glowScale, 1);
+            glowSprite.position.copy(pos);
+            glowSprite.userData = { nodeId: def.id, baseGlowScale: glowScale };
+            nodeGroup.add(glowSprite);
+
+            // Label sprite
+            const labelSprite = createLabelSprite(def.name, '#e8e8f8');
+            labelSprite.position.copy(pos);
+            labelSprite.position.y += def.size + 0.6;
+            labelSprite.userData = { nodeId: def.id, baseYOffset: def.size + 0.6 };
+            nodeGroup.add(labelSprite);
+
+            nodesMap[def.id] = {
+                definition: def,
+                mesh,
+                glowSprite,
+                labelSprite,
+                position: pos.clone(),
+            };
+            allNodes.push({ id: def.id, mesh, glowSprite, labelSprite, position: pos.clone(), def });
+            nodeGlowSprites.push(glowSprite);
+            nodeLabelSprites.push(labelSprite);
+        });
+
+        // ─────────────────────────────────────
+        // BUILD CONNECTIONS
+        // ─────────────────────────────────────
+        const connectionGroup = new THREE.Group();
+        scene.add(connectionGroup);
+        const allConnectionData = [];
+
+        connectionPairs.forEach(([fromId, toId]) => {
+            const fromNode = nodesMap[fromId];
+            const toNode = nodesMap[toId];
+            if (!fromNode || !toNode) return;
+
+            const start = fromNode.position.clone();
+            const end = toNode.position.clone();
+            const mid = start.clone().add(end).multiplyScalar(0.5);
+            const dir = end.clone().sub(start).normalize();
+            const perp = new THREE.Vector3(-dir.y, dir.x, dir.z).normalize();
+            if (perp.length() < 0.1) perp.set(-dir.z, dir.x, dir.y).normalize();
+            const dist = start.distanceTo(end);
+            const arcHeight = dist * 0.45 + (Math.random() - 0.5) * dist * 0.3;
+            const controlPoint = mid.clone().add(perp.clone().multiplyScalar(arcHeight));
+
+            // Sample bezier curve
+            const samples = 60;
+            const curvePoints = [];
+            for (let i = 0; i <= samples; i++) {
+                const t = i / samples;
+                const u = 1 - t;
+                const pt = new THREE.Vector3(
+                    u * u * start.x + 2 * u * t * controlPoint.x + t * t * end.x,
+                    u * u * start.y + 2 * u * t * controlPoint.y + t * t * end.y,
+                    u * u * start.z + 2 * u * t * controlPoint.z + t * t * end.z,
+                );
+                curvePoints.push(pt);
+            }
+
+            // Line geometry
+            const lineGeo = new THREE.BufferGeometry().setFromPoints(curvePoints);
+            const lineMat = new THREE.LineBasicMaterial({
+                color: new THREE.Color(categoryColors[fromNode.definition.category]).multiplyScalar(0.7),
+                transparent: true,
+                opacity: 0.45,
+                depthTest: true,
+                blending: THREE.NormalBlending,
+            });
+            const line = new THREE.Line(lineGeo, lineMat);
+            connectionGroup.add(line);
+
+            // Secondary subtle glow line
+            const glowLineMat = new THREE.LineBasicMaterial({
+                color: new THREE.Color(categoryColors[fromNode.definition.category]).multiplyScalar(1.2),
+                transparent: true,
+                opacity: 0.18,
+                depthTest: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+            });
+            const glowLine = new THREE.Line(lineGeo.clone(), glowLineMat);
+            connectionGroup.add(glowLine);
+
+            allConnectionData.push({
+                fromId,
+                toId,
+                curvePoints,
+                line,
+                glowLine,
+                category: fromNode.definition.category,
+                dist,
+            });
+        });
+
+        // ─────────────────────────────────────
+        // TRAVELING PARTICLES
+        // ─────────────────────────────────────
+        const particlesGroup = new THREE.Group();
+        scene.add(particlesGroup);
+        const travelingParticles = [];
+        const maxTravelers = 22;
+
+        // Select diverse connections for travelers
+        const travelerConnections = allConnectionData.filter((_, i) => i % Math.max(1, Math.floor(
+            allConnectionData.length / maxTravelers)) === 0).slice(0, maxTravelers);
+
+        travelerConnections.forEach((connData, idx) => {
+            const particleGeo = new THREE.SphereGeometry(0.045, 12, 12);
+            const particleMat = new THREE.MeshBasicMaterial({
+                color: new THREE.Color(categoryColors[connData.category] || '#ffffff').multiplyScalar(1.6),
+                transparent: true,
+                opacity: 0.9,
+                depthTest: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+            });
+            const particle = new THREE.Mesh(particleGeo, particleMat);
+            particle.userData = {
+                t: idx / travelerConnections.length,
+                speed: 0.0008 + Math.random() * 0.002,
+                curvePoints: connData.curvePoints,
+                direction: Math.random() > 0.5 ? 1 : -1,
+            };
+            particlesGroup.add(particle);
+            travelingParticles.push(particle);
+        });
+
+        // ─────────────────────────────────────
+        // ORBITAL RING ACCENTS
+        // ─────────────────────────────────────
+        function createOrbitalRing(center, radius, colorHex, opacity = 0.25) {
+            const ringGeo = new THREE.TorusGeometry(radius, 0.03, 16, 120);
+            const ringMat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(colorHex),
+                emissive: new THREE.Color(colorHex).multiplyScalar(0.5),
+                emissiveIntensity: 0.4,
+                metalness: 0.5,
+                roughness: 0.5,
+                transparent: true,
+                opacity,
+                depthTest: true,
+            });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.copy(center);
+            ring.rotation.x = Math.random() * 0.7 + 0.3;
+            ring.rotation.y = Math.random() * Math.PI;
+            ring.castShadow = false;
+            ring.receiveShadow = false;
+            return ring;
+        }
+
+        const ringAccents = [
+            createOrbitalRing(new THREE.Vector3(0.3, 3.4, 0.0), 1.5, '#4caf84', 0.3),
+            createOrbitalRing(new THREE.Vector3(2.0, -1.0, -3.5), 2.0, '#f0a050', 0.25),
+            createOrbitalRing(new THREE.Vector3(-3.3, 0.3, 3.2), 1.6, '#e85d75', 0.28),
+            createOrbitalRing(new THREE.Vector3(4.2, -1.8, 0.8), 1.4, '#3db8b0', 0.26),
+            createOrbitalRing(new THREE.Vector3(-3.8, -2.6, -2.0), 1.3, '#5b9bd5', 0.24),
+        ];
+        ringAccents.forEach(r => scene.add(r));
+
+        // ─────────────────────────────────────
+        // RAYCASTER FOR HOVER
+        // ─────────────────────────────────────
+        const raycaster = new THREE.Raycaster();
+        raycaster.params.Points.threshold = 0.4;
+        raycaster.params.Line = { threshold: 0.3 };
+        const mouse = new THREE.Vector2();
+        let hoveredNode = null;
+        const allNodeMeshes = allNodes.map(n => n.mesh);
+
+        function updateMouse(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        window.addEventListener('mousemove', (event) => {
+            updateMouse(event);
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(allNodeMeshes, false);
+
+            if (intersects.length > 0) {
+                const obj = intersects[0].object;
+                if (obj.userData && obj.userData.id) {
+                    if (hoveredNode !== obj) {
+                        resetHover();
+                        hoveredNode = obj;
+                        obj.material.emissiveIntensity = 1.6;
+                        obj.material.emissive = new THREE.Color(categoryColors[obj.userData.category] ||
+                            '#ffffff').multiplyScalar(1.3);
+                        const glow = nodesMap[obj.userData.id]?.glowSprite;
+                        if (glow) {
+                            glow.material.opacity = 1;
+                            const gs = glow.userData.baseGlowScale || glow.scale.x;
+                            glow.scale.set(gs * 1.5, gs * 1.5, 1);
+                        }
+                        tooltip.textContent = obj.userData.name;
+                        tooltip.classList.add('visible');
+                        document.body.classList.add('pointing');
+                    }
+                    tooltip.style.left = (event.clientX + 20) + 'px';
+                    tooltip.style.top = (event.clientY - 30) + 'px';
+                    return;
+                }
+            }
+            resetHover();
+            tooltip.classList.remove('visible');
+            document.body.classList.remove('pointing');
+            hoveredNode = null;
+        });
+
+        function resetHover() {
+            if (hoveredNode) {
+                const ud = hoveredNode.userData;
+                hoveredNode.material.emissiveIntensity = ud.baseEmissiveIntensity || 0.7;
+                hoveredNode.material.emissive = new THREE.Color(categoryColors[ud.category] || '#ffffff')
+                    .multiplyScalar(0.45);
+                const glow = nodesMap[ud.id]?.glowSprite;
+                if (glow) {
+                    glow.material.opacity = 0.7;
+                    const gs = glow.userData.baseGlowScale || glow.scale.x;
+                    glow.scale.set(gs, gs, 1);
+                }
+            }
+        }
+
+        window.addEventListener('mouseleave', () => {
+            resetHover();
+            tooltip.classList.remove('visible');
+            document.body.classList.remove('pointing');
+            hoveredNode = null;
+        });
+
+        // Touch support
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 1) {
+                updateMouse(e.touches[0]);
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(allNodeMeshes, false);
+                if (intersects.length > 0 && intersects[0].object.userData?.id) {
+                    const obj = intersects[0].object;
+                    if (hoveredNode !== obj) {
+                        resetHover();
+                        hoveredNode = obj;
+                        obj.material.emissiveIntensity = 1.6;
+                        obj.material.emissive = new THREE.Color(categoryColors[obj.userData.category] ||
+                            '#ffffff').multiplyScalar(1.3);
+                        const glow = nodesMap[obj.userData.id]?.glowSprite;
+                        if (glow) {
+                            glow.material.opacity = 1;
+                            const gs = glow.userData.baseGlowScale || glow.scale.x;
+                            glow.scale.set(gs * 1.5, gs * 1.5, 1);
+                        }
+                        tooltip.textContent = obj.userData.name;
+                        tooltip.classList.add('visible');
+                        tooltip.style.left = (e.touches[0].clientX + 20) + 'px';
+                        tooltip.style.top = (e.touches[0].clientY - 40) + 'px';
+                    }
+                } else {
+                    resetHover();
+                    tooltip.classList.remove('visible');
+                    hoveredNode = null;
+                }
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => {
+            setTimeout(() => {
+                resetHover();
+                tooltip.classList.remove('visible');
+                hoveredNode = null;
+            }, 1500);
+        });
+
+        // ─────────────────────────────────────
+        // ANIMATION LOOP
+        // ─────────────────────────────────────
+        const clock = new THREE.Clock();
+
+        function animate(timestamp) {
+            requestAnimationFrame(animate);
+
+            const dt = Math.min(clock.getDelta(), 0.1);
+            const elapsed = timestamp * 0.001;
+
+            controls.update();
+
+            // Pulse nodes
+            allNodes.forEach((nodeData) => {
+                const ud = nodeData.mesh.userData;
+                if (nodeData.mesh !== hoveredNode) {
+                    const pulse = 1 + Math.sin(elapsed * 2.2 + ud.pulseOffset) * 0.06;
+                    nodeData.mesh.scale.setScalar(ud.baseScale * pulse);
+                    const glow = nodeData.glowSprite;
+                    const gs = glow.userData.baseGlowScale || glow.scale.x;
+                    const glowPulse = 1 + Math.sin(elapsed * 2.2 + ud.pulseOffset + 0.5) * 0.1;
+                    glow.scale.set(gs * glowPulse, gs * glowPulse, 1);
+                    glow.material.opacity = 0.55 + Math.sin(elapsed * 2.2 + ud.pulseOffset) * 0.2;
+                }
+            });
+
+            // Animate traveling particles
+            travelingParticles.forEach((particle) => {
+                const ud = particle.userData;
+                ud.t += ud.speed * ud.direction;
+                if (ud.t > 1.0) ud.t -= 1.0;
+                if (ud.t < 0.0) ud.t += 1.0;
+                const t = Math.max(0, Math.min(1, ud.t));
+                const pts = ud.curvePoints;
+                const idx = t * (pts.length - 1);
+                const i0 = Math.floor(idx);
+                const i1 = Math.min(i0 + 1, pts.length - 1);
+                const frac = idx - i0;
+                const pt = new THREE.Vector3().lerpVectors(pts[i0], pts[i1], frac);
+                particle.position.copy(pt);
+                // Fade opacity near ends
+                const fadeDist = Math.min(t, 1 - t) * 5;
+                particle.material.opacity = Math.min(1, fadeDist) * 0.85;
+            });
+
+            // Subtle star rotation
+            stars.rotation.y += dt * 0.015;
+            stars.rotation.x += dt * 0.006;
+
+            // Subtle ring rotation
+            ringAccents.forEach((ring, i) => {
+                ring.rotation.z += dt * (0.08 + i * 0.03);
+                ring.rotation.x += dt * (0.04 + i * 0.02) * (i % 2 === 0 ? 1 : -1);
+            });
+
+            renderer.render(scene, camera);
+        }
+
+        // ─────────────────────────────────────
+        // RESIZE HANDLER
+        // ─────────────────────────────────────
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // ─────────────────────────────────────
+        // KEYBOARD SHORTCUTS
+        // ─────────────────────────────────────
+        window.addEventListener('keydown', (e) => {
+            switch (e.key.toLowerCase()) {
+                case 'r':
+                    controls.autoRotate = !controls.autoRotate;
+                    break;
+                case 'f':
+                    controls.target.set(0, 0.1, -0.3);
+                    camera.position.set(8, 3.5, 10);
+                    camera.lookAt(controls.target);
+                    controls.update();
+                    break;
+                case '0':
+                    controls.autoRotateSpeed = 0.35;
+                    controls.target.set(0, 0.1, -0.3);
+                    camera.position.set(8, 3.5, 10);
+                    controls.update();
+                    break;
+            }
+        });
+
+        // ─────────────────────────────────────
+        // START
+        // ─────────────────────────────────────
+        requestAnimationFrame(animate);
+
+        console.log('%c🧬 BiRAGAS Causality Network %cReady',
+            'font-size:1.2em;color:#64b5f6;', 'color:#aaa;');
+        console.log('%cModules: %c26 %c| Connections: %c' + connectionPairs.length +
+            ' %c| Traveling particles: %c' + travelingParticles.length,
+            'color:#ccc;', 'color:#f0a050;', 'color:#ccc;', 'color:#4caf84;', 'color:#ccc;', 'color:#e85d75;');
+        console.log('%c🖱 Drag to rotate %c| %c🖱 Scroll to zoom %c| %cPress R to toggle auto-rotate %c| %cPress F to reset view',
+            'color:#fff;', 'color:#aaa;', 'color:#fff;', 'color:#aaa;', 'color:#fff;', 'color:#aaa;', 'color:#fff;',
+            'color:#aaa;');
+    </script>
+</body>
+</html>
